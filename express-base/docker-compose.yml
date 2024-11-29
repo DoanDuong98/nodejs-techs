@@ -1,0 +1,6 @@
+services:
+  express-app:
+    image: nodejs-docker/node:v1
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
