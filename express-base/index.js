@@ -1,6 +1,10 @@
 const express = require('express');
 const app = express();
 
+// redis
+const initRedis = require('./src/dbs/init.redis');
+initRedis.initRedis();
+
 app.get('/hello', (req, res) => {
     res.send('Hello World!');
 });

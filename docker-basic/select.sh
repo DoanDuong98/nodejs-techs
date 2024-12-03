@@ -11,11 +11,12 @@ error_handler() {
 
 selected_dir=${1:-"nodejs"}
 destination_dir="../express-base"
+directory=$(dirname "$0")
 
 echo "You selected dir:: $selected_dir"
 
 function copyDockerFile() {
-    cp "./$selected_dir/Dockerfile" "$destination_dir/Dockerfile" && cp "./$selected_dir/docker-compose.yml" "$destination_dir/docker-compose.yml"
+    cp "$directory/$selected_dir/Dockerfile" "$destination_dir/Dockerfile" && cp "$directory/$selected_dir/docker-compose.yml" "$destination_dir/docker-compose.yml" && cp "$directory/$selected_dir/.dockerignore" "$destination_dir/.dockerignore"
     echo "Copy Dockerfile from $selected_dir successfully"
 }
 

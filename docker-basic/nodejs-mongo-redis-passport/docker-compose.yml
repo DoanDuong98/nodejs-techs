@@ -4,15 +4,16 @@ services:
   app:
     image: nodejs-docker/docker-node-mongo-redis:v1
     volumes:
-      - ./:/app # mount từ môi trường gốc vào trong để nếu các bạn thay đổi code thì bên trong sẽ tự động cập nhật
-    environment: # phần này ta định nghĩa ở file .env nhé
+      - ./:/app
+      - /app/node_modules
+    environment:
       - DB_HOST=${DB_HOST}
       - DB_NAME=${DB_NAME}
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
       - PORT=${PORT}
     ports:
-      - "${PORT}:${PORT}" # phần này ta định nghĩa ở file .env nhé
+      - "${PORT}:${PORT}"
     restart: unless-stopped
     depends_on:
       - redis
@@ -21,7 +22,7 @@ services:
   db:
     image: mongo:4.4
     volumes:
-      - .docker/data/db:/data/db
+      - mongodata:/data/db
     restart: unless-stopped
 
   redis:
@@ -29,4 +30,7 @@ services:
     volumes:
       - .docker/data/redis:/data
     restart: unless-stopped
+
+volumes:
+  mongodata:
 

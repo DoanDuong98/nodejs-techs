@@ -2,10 +2,13 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-COPY .. .
+COPY . .
 
 RUN npm install
 
-EXPOSE 3001
-
+# Development
 CMD ["npm", "run", "start"]
+
+# Production
+# RUN npm install -g pm2
+# CMD ["pm2-runtime", "ecosystem.config.js", "--env", "production"]
