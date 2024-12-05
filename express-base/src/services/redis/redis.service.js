@@ -7,141 +7,77 @@ const { instance: client } = getRedis();
 /*
 * PRACTICE
 * */
+const Redis = require('ioredis');
 
-// BASIC
+// Khởi tạo kết nối đến Redis
+const redis = new Redis();
 
-client.send_command('GET someKey')
-/*
-    String
-    - cmd
-        GET key
-        SET key value
-        EXISTS key
-*/
+// Lấy thông tin sản phẩm
+async function getProduct(productId) {
+    return await redis.hgetall(`product:${productId}`);
+}
 
-/*
-    Hash
-    - one key - many value
-    - CMD: f
-        HSET name key value
-        HGET name key
-        HMSET name key1 vakue1 key2 value2
-        HMGET name key1 key2
-        HDEL name key
-        HLEN name
-        HEXISTS name key
-        HINCRBY name key number
-        HKEYS name
-        HVALS name
-        HGETALL name
-    - using:
-        Cart
-*/
+// Thêm sản phẩm vào giỏ hàng
+async function addToCart(userId, productId) {
+    await redis.sadd(`cart:${userId}`, productId);
+    await redis.hincrby(`user:${userId}`, 'cart_total', 1);
+}
 
-/*
-    List
-    - cmd:
-        LPUSH name key1 key2 key3 ... // left push
-        LRANGE name start stop // like slice js
-        RPUSH ...
-        LPOP name stop // delete number_ele first left
-        RPOP ...
-        BLOP name timeout
-        LINDEX name index
-        LLEN name
-        LREM name index1 index2
-        LTRIM name start stop
-        LSET name index new_value
-        LINSERT name BEFORE|AFTER ele value
-     - using for queue, stack,..
-        MQ: đảm bảo thứ tự, duplicate,
-*/
+// Lấy giỏ hàng của người dùng
+async function getCart(userId) {
+    return await redis.smembers(`cart:${userId}`);
+}
 
-/*
-    Sets
-    lưu không trùng lặp giá trị
-    không theo thứ tự cố định
-    - cmd:
-        SADD name val1 val2 val3 ...
-        SMEMBERS name // show
-        SREM name val // remove val
-        SCARD name // length
-        SISMEMBER name val // check exists
-        SRANDMEMBER name count
-        SPOP name count
-        SMOVE src des val
-        SINTER key1 key2
-    - using:
-        like post
-        suggestion
-        tìm bạn, sản phẩm chung
-*/
+// lưu session của người dùng
+async function saveSessionData(user, sessionId) {
+    const sessionKey = `session:${sessionId}`;
+    const sessionData = {
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+        isLoggedIn: true,
+    };
+    await redis.set(sessionKey, JSON.stringify(sessionData), 'EX', 3600); // Hết hạn sau 1 giờ
+}
 
-/*
-    Zset
-    tập hợp có thứ tự
-    - cmd:
-        ZADD name val1 key1 ...
-        ZREVRANGE name start stop WITHSCORES // sort by value
-        ZRANGE name start stop
-        ZREM name key
-        ZINCRBY name val key
-        ZRANGEBYSCORE name prev after
-    - using
-        bảng xếp hạng ...
-*/
+// rate limit
+async function rateLimit(userId) {
+    const rateLimitKey = `rate_limit:${userId}:booking`;
 
-// Transaction
-/*
-* Watch
-* Multi: đánh dấu
-* Exec: thực thi
-* Discard:
-* */
+    // Đếm số lần đặt vé trong vòng 1 phút
+    const attempts = await redis.get(rateLimitKey);
+    if (attempts >= 5) {
+        console.log('Bạn đã vượt quá giới hạn số lần đặt vé');
+    } else {
+        await redis.incr(rateLimitKey);
+        await redis.expire(rateLimitKey, 60); // Đặt thời gian hết hạn của khóa là 60 giây
+        console.log('Vé đã được đặt thành công');
+    }
+}
+// Pub/Sub
+async function notify() {
+    // Publisher
+    redis.publish('ticket:updates', JSON.stringify({ eventId: 'event_123', message: 'Vé mới vừa được thêm' }));
 
-client
-    .multi()
-    .set("foo", "bar")
-    .get("foo")
-    .exec((err, results) => {
-        // results === [[null, 'OK'], [null, 'bar']]
+    // Subscriber
+    redis.subscribe('ticket:updates');
+    redis.on('message', (channel, message) => {
+        console.log(`New update: ${message}`);
     });
-
-// Redis – 3 vấn đề LỚN có thể mất việc khi sử dụng cache
-
-
-// 1. Sự cố tuyết lở trong Cache (cache avalanche)
-/*
-* Đặt thời gian hết hạn đồng đều
-* Khóa Mutex
-* Chiến lược cache kép
-* Cập nhật bộ nhớ cache trong background.
-* */
-
-// 2. Sự cố sụp đổ (cache breakdown)
-/*
-* Nếu exp time => set cache without expire time
-* set lại exp cache => cronjob at 00:00
-* Mutex => req1 -> lock, req2 ...
-*
-* */
-
-// 3. Sự cố xâm nhập cache (cache penetration)
-/*
-* Nếu record không tồn tại trong dbs => set null -> redis
-* Validate query => disable req or set null
-* */
-
-// Triển khai khoá phân tán (Optimistic và Pessimistic)
-/*
-* Optimistic: dùng cho trường hợp các request đến hầu hết sẽ update resource
-* Pessimistic: dùng cho trường hợp các request đến có cả Update lẫn Get dữ liệu và chủ yếu là Get
-* Optimisic lock sẽ block để compare version, nếu X lock trước Y, nhưng Y lại xử lý xong trước -> X update fail -> X retry
-
-=> Optimistic lock: áp dụng khi có xác suất conflict transaction thấp, -> giảm retry.
-=> Pessimistic lock: áp dụng khi có xác suất conflict transaction cao để đảm bảo data consistence.
-* */
+}
 
 
+// Ví dụ sử dụng:
+(async () => {
+    // Lấy thông tin sản phẩm có ID là "product_1"
+    const product = await getProduct('product_1');
+    console.log(product);
 
+    // Thêm sản phẩm vào giỏ hàng của người dùng có ID là "user_123"
+    await addToCart('user_123', 'product_1');
+
+    // Lấy giỏ hàng của người dùng
+    const cart = await getCart('user_123');
+    console.log(cart);
+})();
 

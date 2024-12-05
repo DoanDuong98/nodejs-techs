@@ -31,10 +31,11 @@ async function bookTicket(userId) {
 
     try {
         // Giả sử đây là phần mã đặt vé, cần phải giảm số lượng vé
-        const availableTickets = await redis.get("MAX_TICKETS");
+        let availableTickets = await redis.get("MAX_TICKETS");
+        availableTickets = parseInt(availableTickets, 10);
         if (availableTickets > 0) {
             // update trong redis
-            await redis.set("MAX_TICKETS", availableTickets - 1);
+            await redis.decr("MAX_TICKETS");
             // send mail, update dbs,...
             res.push(userId);
             console.log(`User ${userId} successfully booked a ticket. Remaining tickets: ${availableTickets}`);
@@ -72,7 +73,7 @@ async function attemptBooking(userId) {
 // Mô phỏng đặt vé cho nhiều người dùng cùng lúc
 async function simulateBooking() {
     // const users = ['user1', 'user2', 'user3', 'user4', 'user5'];
-    const users = Array.from({length: 100}, (_, index) => index + 1).sort(() => Math.random() - 0.5).map((num, i) => `user_${num}`);
+    const users = Array.from({length: 1000}, (_, index) => index + 1).sort(() => Math.random() - 0.5).map((num, i) => `user_${num}`);
     await redis.set("MAX_TICKETS", MAX_TICKETS);
     // Giả lập việc nhiều người dùng cố gắng đặt vé
     const bookingPromises = users.map(userId => attemptBooking(userId));

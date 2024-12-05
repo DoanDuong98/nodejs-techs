@@ -16,5 +16,3 @@ runWithLock(criticalTask)
     .catch(err => {
         console.error('Error:', err);
     });
-
-

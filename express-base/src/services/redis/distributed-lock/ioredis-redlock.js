@@ -19,7 +19,7 @@ async function bookTicket(userId) {
 
     try {
         // Cố gắng khóa
-        const lock = await redlock.lock(lockKey, ttl);
+        const lock = await redlock.acquire([lockKey], ttl);
 
         // Giả sử bạn có tổng số vé cho sự kiện này
         if (availableTickets > 0) {
@@ -31,7 +31,7 @@ async function bookTicket(userId) {
         }
 
         // Giải phóng khóa sau khi hoàn thành
-        await lock.unlock();
+        await lock.release();
         console.log(`Lock released by user ${userId}`);
     } catch (err) {
         console.error(`Error booking ticket for user ${userId}: ${err.message}`);
