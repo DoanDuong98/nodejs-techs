@@ -16,7 +16,15 @@ directory=$(dirname "$0")
 echo "You selected dir:: $selected_dir"
 
 function copyDockerFile() {
-    cp "$directory/$selected_dir/Dockerfile" "$destination_dir/Dockerfile" && cp "$directory/$selected_dir/docker-compose.yml" "$destination_dir/docker-compose.yml" && cp "$directory/$selected_dir/.dockerignore" "$destination_dir/.dockerignore"
+    if [ -e "$directory/$selected_dir/Dockerfile" ]; then
+      cp "$directory/$selected_dir/Dockerfile" "$destination_dir/Dockerfile"
+    fi
+    if [ -e "$directory/$selected_dir/docker-compose.yml" ]; then
+      cp "$directory/$selected_dir/docker-compose.yml" "$destination_dir/docker-compose.yml"
+    fi
+    if [ -e "$directory/$selected_dir/Dockerfile" ]; then
+      cp "$directory/$selected_dir/.dockerignore" "$destination_dir/.dockerignore"
+    fi
     echo "Copy Dockerfile from $selected_dir successfully"
 }
 

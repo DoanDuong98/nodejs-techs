@@ -1,10 +1,10 @@
 {
   "name": "express-base",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "start": "node --env-file .env app.js",
+    "dev": "nodemon app.js"
   },
   "keywords": [],
   "author": "",
@@ -13,7 +13,11 @@
   "dependencies": {
     "express": "^4.21.1",
     "ioredis": "^5.4.1",
+    "morgan": "^1.10.0",
     "redis": "^3.1.2",
-    "redlock": "^5.0.0-beta.2"
+    "redlock": "^5.0.0-beta.2",
+    "uuid": "^11.0.3",
+    "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0"
   }
 }
