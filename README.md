@@ -4,4 +4,6 @@ ExpressJS + Practice with some techs simply:
 -  RabbitMQ
 -  Kafka
 -  ELK
+-  Monitor: Promethus, grafana with docker,...
+-  
 -  ...
