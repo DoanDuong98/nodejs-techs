@@ -1,0 +1,16 @@
+version: "3.9"
+
+services:
+  rabbit:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672" # RabbitMQ port
+      - "15672:15672" # RabbitMQ management UI port
+    hostname: my-rabbit
+
+  app:
+    build: .
+    depends_on:
+      - rabbit
+    environment:
+      - AMQP_URL=amqp://my-rabbit:5672 # Connect to the RabbitMQ service
