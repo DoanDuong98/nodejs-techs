@@ -68,6 +68,9 @@
   - **ZRANGEBYSCORE** name prev after
 - Using: bảng xếp hạng ...
 
+## Tránh mất dữ liệu khi bật/tắt service:
+- AOF: ghi log ra file
+- RDB: tạo snapshot
 
 ## **Transaction**
 

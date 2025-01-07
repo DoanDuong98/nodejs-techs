@@ -8,7 +8,7 @@ async function consume() {
     await channel.assertQueue(mainQueue, { durable: true });
 
     console.log('Waiting for messages...');
-    channel.consume(mainQueue, (message) => {
+    await channel.consume(mainQueue, (message) => {
         const content = message.content.toString();
         console.log(`Received: ${content}`);
 
